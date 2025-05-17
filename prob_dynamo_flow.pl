@@ -1,48 +1,40 @@
 % --------------------------
-% Probabilidades iniciais
+% Probabilidades marginais
 % --------------------------
 
-% Chances do volante deslizante
-0.05::flw_true.             % 5% de chance
-flw_false :- \+flw_true.    % O complemento lógico, ou seja, 95% de chance
+0.05::flw_true.                % 5% chance de volante estar desgastado
+flw_false :- \+flw_true.       % 95% implícito
 
-% A condição da rua é "neve" (Str = snow_covered) - Deixaremos em evidência!
-str(snow_covered).
-
-% --------------------------
-% Probabilidade condicional de R
-% --------------------------
-
-% Se a rua está coberta de neve E o volante está desgastado,
-% então o dínamo desliza com 70% de chance
-0.8::r :- str(snow_covered), flw_true.  % Caso r = true
-                                        % Caso r = false, já seria 20% implicitamente
-
-% Se a rua está coberta de neve E o volante NÃO está desgastado,
-% então o dínamo desliza com 40% de chance
-0.5::r :- str(snow_covered), flw_false. % Caso r = true
-                                        % Caso r = false, já seria 50% implicitamente
+% Fixamos a condição da rua como "neve"
+str_snow.                      % Fato lógico (não probabilístico)
+evidence(str_snow, true).      % Evidência que str = snow_covered
 
 % --------------------------
-% Probabilidade condicional de V
+% Probabilidades condicionais (auxiliares)
 % --------------------------
 
-% Se o dínamo está deslizando, tensão é gerada com 90% de chance
-0.9::v :- r.
+% Probabilidade de R = true em diferentes cenários
+0.8::p_r1.   % str = snow, flw = true
+0.5::p_r2.   % str = snow, flw = false
 
-% Se o dínamo NÃO está deslizando, tensão só aparece com 10% de chance
-0.1::v :- \+r.
+% Probabilidade de V = true em diferentes estados de R
+0.9::p_v_if_r.
+0.1::p_v_if_not_r.
 
 % --------------------------
-% Evidência fixa no modelo
+% Regras causais
 % --------------------------
 
-% Estamos fixando a condição da rua como "neve"
-evidence(str(snow_covered), true).
+% Definindo quando R é ativado
+r :- str_snow, flw_true, p_r1.
+r :- str_snow, flw_false, p_r2.
+
+% Definindo quando V é ativado
+v :- r, p_v_if_r.
+v :- \+r, p_v_if_not_r.
 
 % --------------------------
 % Consulta ao modelo
 % --------------------------
 
-% Qual a probabilidade da tensão estar presente (V = true)?
 query(v).
